@@ -147,6 +147,8 @@ ProjectionDivCleaner::ReadParameters ()
 void
 ProjectionDivCleaner::solve ()
 {
+    ABLASTR_PROFILE("ProjectionDivCleaner::solve()");
+
     // Get WarpX object
     auto & warpx = WarpX::GetInstance();
 

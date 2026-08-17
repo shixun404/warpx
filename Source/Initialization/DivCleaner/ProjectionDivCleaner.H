@@ -35,6 +35,7 @@
 #include <AMReX_SPACE.H>
 #include <AMReX_Vector.H>
 
+#include <ablastr/profiler/ProfilerWrapper.H>
 #include <ablastr/utils/Enums.H>
 
 #include "Fields.H"
@@ -88,6 +89,8 @@ private:
         int lev
     )
     {
+        ABLASTR_PROFILE("ProjectionDivCleaner::runMLMG()");
+
         linop.setMaxOrder(m_linop_maxorder);
         linop.setDomainBC(lobc, hibc);
 
@@ -104,7 +107,10 @@ private:
         mlmg.setVerbose(m_verbose);
         mlmg.setBottomVerbose(m_bottom_verbose);
         mlmg.setConvergenceNormType(amrex::MLMGNormType::greater);
-        mlmg.solve({m_solution[lev].get()}, {m_source[lev].get()}, m_rtol, m_atol);
+        {
+            ABLASTR_PROFILE("ProjectionDivCleaner::MLMG::solve");
+            mlmg.solve({m_solution[lev].get()}, {m_source[lev].get()}, m_rtol, m_atol);
+        }
     }
 
 public:
