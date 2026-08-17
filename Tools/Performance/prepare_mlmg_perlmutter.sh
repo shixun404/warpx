@@ -3,7 +3,7 @@
 # Synchronize the two hackathon forks and build WarpX against the AMReX worktree.
 # Run this script on a Perlmutter login node after sourcing the WarpX GPU profile.
 
-set -euo pipefail
+set -eo pipefail
 
 work_root="${WORK_ROOT:-/pscratch/sd/s/swu264/NERSC_HACKATHON_2026}"
 warpx_dir="${WARPX_DIR:-${work_root}/warpx}"
@@ -48,6 +48,7 @@ if [[ -z "${MY_PROFILE:-}" ]]; then
     # shellcheck disable=SC1090
     source "${profile_file}"
 fi
+set -u
 
 sync_repo "${amrex_dir}" "https://github.com/shixun404/amrex.git"
 sync_repo "${warpx_dir}" "https://github.com/shixun404/warpx.git"

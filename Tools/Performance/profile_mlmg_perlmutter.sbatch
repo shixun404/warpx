@@ -15,7 +15,7 @@
 #SBATCH -o mlmg-nvtx.o%j
 #SBATCH -e mlmg-nvtx.e%j
 
-set -euo pipefail
+set -eo pipefail
 
 work_root="${WORK_ROOT:-/pscratch/sd/s/swu264/NERSC_HACKATHON_2026}"
 warpx_dir="${WARPX_DIR:-${work_root}/warpx}"
@@ -27,6 +27,7 @@ if [[ -z "${MY_PROFILE:-}" ]]; then
     # shellcheck disable=SC1090
     source "${profile_file}"
 fi
+set -u
 
 if [[ ! -f "${target_input}" ]]; then
     echo "Target input does not exist: ${target_input}" >&2
