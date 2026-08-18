@@ -80,9 +80,13 @@ export NSYS_TRACE="${NSYS_TRACE:-cuda,nvtx,mpi,osrt}"
 srun --cpu-bind=cores bash -c '
     export CUDA_VISIBLE_DEVICES=$((3-SLURM_LOCALID))
     read -r -a target_args <<< "${TARGET_ARGS}"
+    nsys_mpi_args=()
+    if [[ ",${NSYS_TRACE}," == *,mpi,* ]]; then
+        nsys_mpi_args=(--mpi-impl=mpich)
+    fi
     nsys profile \
         --trace="${NSYS_TRACE}" \
-        --mpi-impl=mpich \
+        "${nsys_mpi_args[@]}" \
         --sample=none \
         --cpuctxsw=none \
         --force-overwrite=true \
