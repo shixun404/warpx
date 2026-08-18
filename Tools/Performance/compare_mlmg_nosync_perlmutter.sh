@@ -15,6 +15,7 @@ warpx_dir="${WARPX_DIR:-${work_root}/warpx}"
 build_dir="${BUILD_DIR:-${warpx_dir}/build_pm_mlmg_nvtx}"
 profile_script="${warpx_dir}/Tools/Performance/profile_mlmg_perlmutter.sbatch"
 comparison_dir="${COMPARISON_DIR:-${work_root}/profiles/mlmg-${SLURM_JOB_ID}-nosync-ab}"
+historic_profile_dir="${HISTORIC_PROFILE_DIR:-${work_root}/profiles/mlmg-57202704}"
 build_jobs="${BUILD_JOBS:-16}"
 
 if [[ -z "${MY_PROFILE:-}" ]]; then
@@ -54,6 +55,13 @@ run_case()
 # The default remains false, reproducing the original synchronization behavior.
 run_case "sync-on" "warpx.projection_div_cleaner.no_gpu_sync=0"
 run_case "no-sync" "warpx.projection_div_cleaner.no_gpu_sync=1"
+
+if [[ -f "${historic_profile_dir}/mlmg-rank0.nsys-rep" ]]; then
+    nsys stats \
+        --report cuda_gpu_kern_sum,cuda_api_sum,nvtx_sum \
+        "${historic_profile_dir}/mlmg-rank0.nsys-rep" \
+        > "${comparison_dir}/historic-57202704-rank0-stats.txt"
+fi
 
 echo
 echo "===== sync-on ====="
