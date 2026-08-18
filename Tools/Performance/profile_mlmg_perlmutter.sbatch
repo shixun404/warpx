@@ -29,6 +29,25 @@ if [[ -z "${MY_PROFILE:-}" ]]; then
 fi
 set -u
 
+if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+    standard_venv="${SW_DIR:-}/venvs/warpx-gpu"
+    if [[ -n "${WARPX_VENV:-}" ]]; then
+        venv_dir="${WARPX_VENV}"
+    elif [[ -n "${SW_DIR:-}" && -d "${standard_venv}" ]]; then
+        venv_dir="${standard_venv}"
+    else
+        venv_dir="${work_root}/.venv-mlmg"
+    fi
+
+    if [[ ! -f "${venv_dir}/bin/activate" ]]; then
+        echo "Missing Python environment: ${venv_dir}" >&2
+        echo "Run Tools/Performance/prepare_mlmg_perlmutter.sh first." >&2
+        exit 2
+    fi
+    # shellcheck disable=SC1091
+    source "${venv_dir}/bin/activate"
+fi
+
 if [[ ! -f "${target_input}" ]]; then
     echo "Target input does not exist: ${target_input}" >&2
     exit 2
