@@ -73,10 +73,12 @@ export MPLBACKEND=Agg
 export PROFILE_DIR="${profile_dir}"
 export PROFILE_EXE="${profile_exe}"
 export TARGET_INPUT="${target_input}"
+export TARGET_ARGS="${TARGET_ARGS:-}"
 
 # TARGET_INPUT can point at the team's exact native input deck or Python application.
 srun --cpu-bind=cores bash -c '
     export CUDA_VISIBLE_DEVICES=$((3-SLURM_LOCALID))
+    read -r -a target_args <<< "${TARGET_ARGS}"
     nsys profile \
         --trace=cuda,nvtx,mpi,osrt \
         --mpi-impl=mpich \
@@ -84,7 +86,7 @@ srun --cpu-bind=cores bash -c '
         --cpuctxsw=none \
         --force-overwrite=true \
         --output="${PROFILE_DIR}/mlmg-rank${SLURM_PROCID}" \
-        "${PROFILE_EXE}" "${TARGET_INPUT}"
+        "${PROFILE_EXE}" "${TARGET_INPUT}" "${target_args[@]}"
 '
 
 echo "Nsight Systems reports: ${profile_dir}/mlmg-rank*.nsys-rep"

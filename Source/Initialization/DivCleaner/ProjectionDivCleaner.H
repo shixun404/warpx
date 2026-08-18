@@ -59,6 +59,7 @@ protected:
     bool m_agglomeration = false;
     bool m_consolidation = false;
     bool m_semicoarsening = true;
+    bool m_no_gpu_sync = false;
     int m_max_coarsening_level = 10;
     int m_max_semicoarsening_level = 10;
     amrex::BottomSolver m_bottom_solver = amrex::BottomSolver::bicgstab;
@@ -106,6 +107,7 @@ private:
         mlmg.setBottomSolver(m_bottom_solver);
         mlmg.setVerbose(m_verbose);
         mlmg.setBottomVerbose(m_bottom_verbose);
+        mlmg.setNoGpuSync(m_no_gpu_sync);
         mlmg.setConvergenceNormType(amrex::MLMGNormType::greater);
         {
             ABLASTR_PROFILE("ProjectionDivCleaner::MLMG::solve");

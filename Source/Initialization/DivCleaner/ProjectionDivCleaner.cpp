@@ -141,6 +141,7 @@ ProjectionDivCleaner::ReadParameters ()
 
     // Defaults to rtol 5e-12 for double fields and 5e-5 for single
     utils::parser::queryWithParser(pp_div_cleaner, "atol", m_atol);
+    pp_div_cleaner.query("no_gpu_sync", m_no_gpu_sync);
     utils::parser::queryWithParser(pp_div_cleaner, "rtol", m_rtol);
 }
 
