@@ -1,0 +1,35 @@
+# Configurable-size MLMG benchmark based on a magnetic-mirror field.
+# Override amr.n_cell and amr.max_grid_size on the WarpX command line for sweeps.
+
+max_step = 0
+
+amr.n_cell = 256 256 256
+amr.max_grid_size = 64
+amr.blocking_factor = 8
+amr.max_level = 0
+
+geometry.dims = 3
+geometry.prob_lo = -1.0 -1.0 -1.0
+geometry.prob_hi =  1.0  1.0  1.0
+
+boundary.field_lo = pec pec neumann
+boundary.field_hi = pec pec neumann
+
+warpx.const_dt = 1.0e-9
+warpx.serialize_initial_conditions = 0
+warpx.do_dynamic_scheduling = 0
+warpx.verbose = 1
+
+# The alpha terms form a divergence-free paraxial magnetic mirror. The epsilon
+# perturbation gives the projection cleaner a controlled non-zero source.
+my_constants.b0 = 1.0
+my_constants.alpha = 0.25
+my_constants.epsilon = 0.05
+
+warpx.B_ext_grid_init_style = parse_B_ext_grid_function
+warpx.Bx_external_grid_function(x,y,z) = -alpha*x*z + epsilon*sin(2*pi*x)
+warpx.By_external_grid_function(x,y,z) = -alpha*y*z
+warpx.Bz_external_grid_function(x,y,z) = b0*(1.0 + alpha*z*z)
+
+warpx.do_initial_div_cleaning = 1
+warpx.projection_div_cleaner.rtol = 5.0e-12

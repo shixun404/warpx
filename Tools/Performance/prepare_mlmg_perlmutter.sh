@@ -11,6 +11,7 @@ amrex_dir="${AMREX_DIR:-${work_root}/amrex}"
 branch="${MLMG_BRANCH:-hackathon-mlmg-nvtx}"
 build_dir="${BUILD_DIR:-${warpx_dir}/build_pm_mlmg_nvtx}"
 build_jobs="${BUILD_JOBS:-16}"
+build_python="${BUILD_PYTHON:-OFF}"
 
 sync_repo()
 {
@@ -56,53 +57,59 @@ sync_repo "${warpx_dir}" "https://github.com/shixun404/warpx.git"
 echo "WarpX commit: $(git -C "${warpx_dir}" rev-parse HEAD)"
 echo "AMReX commit: $(git -C "${amrex_dir}" rev-parse HEAD)"
 
-# The system Python does not provide the wheel command needed by pyAMReX's
-# pip target. Prefer the standard WarpX environment and otherwise create a
-# small, benchmark-local environment instead of installing into --user.
-if [[ -z "${VIRTUAL_ENV:-}" ]]; then
-    standard_venv="${SW_DIR:-}/venvs/warpx-gpu"
-    if [[ -n "${WARPX_VENV:-}" ]]; then
-        venv_dir="${WARPX_VENV}"
-    elif [[ -n "${SW_DIR:-}" && -d "${standard_venv}" ]]; then
-        venv_dir="${standard_venv}"
-    else
-        venv_dir="${work_root}/.venv-mlmg"
+python_cmake_arg=()
+if [[ "${build_python}" == "ON" ]]; then
+    # Python bindings are optional for this workflow. If requested, prefer the
+    # standard WarpX environment and otherwise create a benchmark-local one.
+    if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+        standard_venv="${SW_DIR:-}/venvs/warpx-gpu"
+        if [[ -n "${WARPX_VENV:-}" ]]; then
+            venv_dir="${WARPX_VENV}"
+        elif [[ -n "${SW_DIR:-}" && -d "${standard_venv}" ]]; then
+            venv_dir="${standard_venv}"
+        else
+            venv_dir="${work_root}/.venv-mlmg"
+        fi
+
+        if [[ ! -d "${venv_dir}" ]]; then
+            python3 -m venv "${venv_dir}"
+        fi
+        # shellcheck disable=SC1091
+        source "${venv_dir}/bin/activate"
     fi
 
-    if [[ ! -d "${venv_dir}" ]]; then
-        python3 -m venv "${venv_dir}"
+    if ! python3 -c 'import build, packaging, setuptools, wheel' >/dev/null 2>&1; then
+        python3 -m pip install --upgrade pip build packaging 'setuptools[core]' wheel
     fi
-    # shellcheck disable=SC1091
-    source "${venv_dir}/bin/activate"
-fi
+    if ! python3 -c 'import numpy, periodictable, picmistandard' >/dev/null 2>&1; then
+        python3 -m pip install --upgrade -r "${warpx_dir}/requirements.txt"
+    fi
 
-if ! python3 -c 'import build, packaging, setuptools, wheel' >/dev/null 2>&1; then
-    python3 -m pip install --upgrade pip build packaging 'setuptools[core]' wheel
+    echo "Python executable: $(command -v python3)"
+    python3 -c 'import wheel; print("wheel version:", wheel.__version__)'
+    python_cmake_arg=(-DPython_EXECUTABLE="$(command -v python3)")
 fi
-if ! python3 -c 'import numpy, periodictable, picmistandard' >/dev/null 2>&1; then
-    python3 -m pip install --upgrade -r "${warpx_dir}/requirements.txt"
-fi
-
-echo "Python executable: $(command -v python3)"
-python3 -c 'import wheel; print("wheel version:", wheel.__version__)'
 
 cmake --fresh -S "${warpx_dir}" -B "${build_dir}" \
     -DWarpX_COMPUTE=CUDA \
     -DWarpX_DIMS=3 \
-    -DWarpX_APP=OFF \
-    -DWarpX_PYTHON=ON \
+    -DWarpX_APP=ON \
+    -DWarpX_PYTHON="${build_python}" \
     -DWarpX_PYTHON_IPO=OFF \
     -DWarpX_FFT=OFF \
     -DWarpX_OPENPMD=OFF \
     -DWarpX_QED=OFF \
     -DWarpX_amrex_src="${amrex_dir}" \
-    -DPython_EXECUTABLE="$(command -v python3)" \
-    -DAMReX_TINY_PROFILE=ON
+    -DAMReX_TINY_PROFILE=ON \
+    "${python_cmake_arg[@]}"
 
-cmake --build "${build_dir}" -j "${build_jobs}" --target pip_install
+cmake --build "${build_dir}" -j "${build_jobs}"
+if [[ "${build_python}" == "ON" ]]; then
+    cmake --build "${build_dir}" -j "${build_jobs}" --target pip_install
+fi
 
 cache_file="${build_dir}/CMakeCache.txt"
 grep -E '^(WarpX_amrex_src|WarpX_COMPUTE|WarpX_DIMS|WarpX_MPI|AMReX_CUDA|AMReX_TINY_PROFILE):' \
     "${cache_file}"
 
-echo "Build ready: ${build_dir}"
+echo "WarpX executable: ${build_dir}/bin/warpx.3d"

@@ -19,8 +19,9 @@ set -eo pipefail
 
 work_root="${WORK_ROOT:-/pscratch/sd/s/swu264/NERSC_HACKATHON_2026}"
 warpx_dir="${WARPX_DIR:-${work_root}/warpx}"
+build_dir="${BUILD_DIR:-${warpx_dir}/build_pm_mlmg_nvtx}"
 profile_dir="${PROFILE_DIR:-${work_root}/profiles/mlmg-${SLURM_JOB_ID}}"
-target_input="${TARGET_INPUT:-${warpx_dir}/Tools/Performance/inputs_mlmg_magnetic_mirror_picmi.py}"
+target_input="${TARGET_INPUT:-${warpx_dir}/Tools/Performance/inputs_mlmg_magnetic_mirror}"
 
 if [[ -z "${MY_PROFILE:-}" ]]; then
     profile_file="${PERLMUTTER_GPU_PROFILE:-${HOME}/perlmutter_gpu_warpx.profile}"
@@ -29,27 +30,36 @@ if [[ -z "${MY_PROFILE:-}" ]]; then
 fi
 set -u
 
-if [[ -z "${VIRTUAL_ENV:-}" ]]; then
-    standard_venv="${SW_DIR:-}/venvs/warpx-gpu"
-    if [[ -n "${WARPX_VENV:-}" ]]; then
-        venv_dir="${WARPX_VENV}"
-    elif [[ -n "${SW_DIR:-}" && -d "${standard_venv}" ]]; then
-        venv_dir="${standard_venv}"
-    else
-        venv_dir="${work_root}/.venv-mlmg"
-    fi
-
-    if [[ ! -f "${venv_dir}/bin/activate" ]]; then
-        echo "Missing Python environment: ${venv_dir}" >&2
-        echo "Run Tools/Performance/prepare_mlmg_perlmutter.sh first." >&2
-        exit 2
-    fi
-    # shellcheck disable=SC1091
-    source "${venv_dir}/bin/activate"
-fi
-
 if [[ ! -f "${target_input}" ]]; then
     echo "Target input does not exist: ${target_input}" >&2
+    exit 2
+fi
+
+if [[ "${target_input}" == *.py ]]; then
+    if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+        standard_venv="${SW_DIR:-}/venvs/warpx-gpu"
+        if [[ -n "${WARPX_VENV:-}" ]]; then
+            venv_dir="${WARPX_VENV}"
+        elif [[ -n "${SW_DIR:-}" && -d "${standard_venv}" ]]; then
+            venv_dir="${standard_venv}"
+        else
+            venv_dir="${work_root}/.venv-mlmg"
+        fi
+        if [[ -f "${venv_dir}/bin/activate" ]]; then
+            # shellcheck disable=SC1091
+            source "${venv_dir}/bin/activate"
+        fi
+    fi
+    python_deps="${PYTHON_DEPS:-${work_root}/python_deps}"
+    if [[ -d "${python_deps}" ]]; then
+        export PYTHONPATH="${python_deps}:${warpx_dir}/Python:${PYTHONPATH:-}"
+    fi
+    profile_exe="${PYTHON_EXE:-$(command -v python3)}"
+else
+    profile_exe="${WARPX_EXE:-${build_dir}/bin/warpx.3d}"
+fi
+if [[ ! -x "${profile_exe}" ]]; then
+    echo "Profile executable is missing or not executable: ${profile_exe}" >&2
     exit 2
 fi
 
@@ -61,10 +71,10 @@ export OMP_NUM_THREADS="${OMP_NUM_THREADS:-16}"
 export AMREX_DEFAULT_INIT="${AMREX_DEFAULT_INIT:-amrex.use_gpu_aware_mpi=1}"
 export MPLBACKEND=Agg
 export PROFILE_DIR="${profile_dir}"
+export PROFILE_EXE="${profile_exe}"
 export TARGET_INPUT="${target_input}"
 
-# MLMG_NCELL, MLMG_MAX_GRID_SIZE, MLMG_BLOCKING_FACTOR and MLMG_RTOL can be
-# exported before sbatch. TARGET_INPUT can point at the team's exact application.
+# TARGET_INPUT can point at the team's exact native input deck or Python application.
 srun --cpu-bind=cores bash -c '
     export CUDA_VISIBLE_DEVICES=$((3-SLURM_LOCALID))
     nsys profile \
@@ -74,7 +84,7 @@ srun --cpu-bind=cores bash -c '
         --cpuctxsw=none \
         --force-overwrite=true \
         --output="${PROFILE_DIR}/mlmg-rank${SLURM_PROCID}" \
-        python3 "${TARGET_INPUT}"
+        "${PROFILE_EXE}" "${TARGET_INPUT}"
 '
 
 echo "Nsight Systems reports: ${profile_dir}/mlmg-rank*.nsys-rep"
