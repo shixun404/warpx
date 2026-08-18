@@ -28,9 +28,30 @@ set -u
 
 mkdir -p "${comparison_dir}"
 
+export MPICH_GPU_SUPPORT_ENABLED="${MPICH_GPU_SUPPORT_ENABLED:-1}"
+export CRAY_ACCEL_TARGET="${CRAY_ACCEL_TARGET:-nvidia80}"
+export MPICH_OFI_NIC_POLICY=GPU
+export AMREX_DEFAULT_INIT="${AMREX_DEFAULT_INIT:-amrex.use_gpu_aware_mpi=1}"
+export OMP_NUM_THREADS="${OMP_NUM_THREADS:-16}"
+
 echo "WarpX commit: $(git -C "${warpx_dir}" rev-parse HEAD)"
+echo "MPICH_GPU_SUPPORT_ENABLED=${MPICH_GPU_SUPPORT_ENABLED}"
+echo "CRAY_ACCEL_TARGET=${CRAY_ACCEL_TARGET}"
 echo "Building: ${build_dir}"
 cmake --build "${build_dir}" -j "${build_jobs}"
+
+profile_exe="${WARPX_EXE:-${build_dir}/bin/warpx.3d}"
+target_input="${TARGET_INPUT:-${warpx_dir}/Tools/Performance/inputs_mlmg_magnetic_mirror}"
+export PROFILE_EXE="${profile_exe}"
+export TARGET_INPUT="${target_input}"
+
+if [[ "${RUN_PREFLIGHT:-1}" == "1" ]]; then
+    echo "Running sync-on preflight without Nsight Systems"
+    srun --cpu-bind=cores bash -c '
+        export CUDA_VISIBLE_DEVICES=$((3-SLURM_LOCALID))
+        "${PROFILE_EXE}" "${TARGET_INPUT}" warpx.projection_div_cleaner.no_gpu_sync=0
+    ' 2>&1 | tee "${comparison_dir}/preflight.log"
+fi
 
 run_case()
 {

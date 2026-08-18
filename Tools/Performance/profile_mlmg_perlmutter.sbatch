@@ -67,6 +67,8 @@ mkdir -p "${profile_dir}"
 cd "${profile_dir}"
 
 export MPICH_OFI_NIC_POLICY=GPU
+export MPICH_GPU_SUPPORT_ENABLED="${MPICH_GPU_SUPPORT_ENABLED:-1}"
+export CRAY_ACCEL_TARGET="${CRAY_ACCEL_TARGET:-nvidia80}"
 export OMP_NUM_THREADS="${OMP_NUM_THREADS:-16}"
 export AMREX_DEFAULT_INIT="${AMREX_DEFAULT_INIT:-amrex.use_gpu_aware_mpi=1}"
 export MPLBACKEND=Agg
