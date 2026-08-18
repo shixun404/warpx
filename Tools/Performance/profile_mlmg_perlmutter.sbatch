@@ -74,13 +74,14 @@ export PROFILE_DIR="${profile_dir}"
 export PROFILE_EXE="${profile_exe}"
 export TARGET_INPUT="${target_input}"
 export TARGET_ARGS="${TARGET_ARGS:-}"
+export NSYS_TRACE="${NSYS_TRACE:-cuda,nvtx,mpi,osrt}"
 
 # TARGET_INPUT can point at the team's exact native input deck or Python application.
 srun --cpu-bind=cores bash -c '
     export CUDA_VISIBLE_DEVICES=$((3-SLURM_LOCALID))
     read -r -a target_args <<< "${TARGET_ARGS}"
     nsys profile \
-        --trace=cuda,nvtx,mpi,osrt \
+        --trace="${NSYS_TRACE}" \
         --mpi-impl=mpich \
         --sample=none \
         --cpuctxsw=none \

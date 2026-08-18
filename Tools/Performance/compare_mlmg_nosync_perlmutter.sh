@@ -17,6 +17,7 @@ profile_script="${warpx_dir}/Tools/Performance/profile_mlmg_perlmutter.sbatch"
 comparison_dir="${COMPARISON_DIR:-${work_root}/profiles/mlmg-${SLURM_JOB_ID}-nosync-ab}"
 historic_profile_dir="${HISTORIC_PROFILE_DIR:-${work_root}/profiles/mlmg-57202704}"
 build_jobs="${BUILD_JOBS:-16}"
+nsys_trace="${NSYS_TRACE:-cuda,nvtx,osrt}"
 
 if [[ -z "${MY_PROFILE:-}" ]]; then
     profile_file="${PERLMUTTER_GPU_PROFILE:-${HOME}/perlmutter_gpu_warpx.profile}"
@@ -40,6 +41,7 @@ run_case()
     echo "Running ${label}: TARGET_ARGS=${target_args:-<empty>}"
     PROFILE_DIR="${case_dir}" \
     TARGET_ARGS="${target_args}" \
+    NSYS_TRACE="${nsys_trace}" \
         bash "${profile_script}" 2>&1 | tee "${comparison_dir}/${label}.log"
 
     grep -E \
