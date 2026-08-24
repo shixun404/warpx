@@ -1,0 +1,92 @@
+diff --git a/Src/LinearSolvers/MLMG/AMReX_MLCurlCurl.cpp b/Src/LinearSolvers/MLMG/AMReX_MLCurlCurl.cpp
+index 7b01dc0b9..54397c2cf 100644
+--- a/Src/LinearSolvers/MLMG/AMReX_MLCurlCurl.cpp
++++ b/Src/LinearSolvers/MLMG/AMReX_MLCurlCurl.cpp
+@@ -303,6 +303,12 @@ void MLCurlCurl::setLevelBC (int amrlev, const MF* levelbcdata, // TODO
+ 
+ void MLCurlCurl::restriction (int amrlev, int cmglev, MF& crse, MF& fine) const
+ {
++    BL_PROFILE_VAR(
++        "MLCurlCurl::restriction::amr=" + std::to_string(amrlev)
++            + "::fine_mg=" + std::to_string(cmglev-1)
++            + "::coarse_mg=" + std::to_string(cmglev),
++        blp_mlcurlcurl_restriction);
++
+     IntVect ratio = (amrlev > 0) ? IntVect(2) : this->mg_coarsen_ratio_vec[cmglev-1];
+     AMREX_ALWAYS_ASSERT(ratio == 2);
+ 
+@@ -340,6 +346,12 @@ void MLCurlCurl::restriction (int amrlev, int cmglev, MF& crse, MF& fine) const
+ void MLCurlCurl::interpolation (int amrlev, int fmglev, MF& fine,
+                                 const MF& crse) const
+ {
++    BL_PROFILE_VAR(
++        "MLCurlCurl::interpolation::amr=" + std::to_string(amrlev)
++            + "::fine_mg=" + std::to_string(fmglev)
++            + "::coarse_mg=" + std::to_string(fmglev+1),
++        blp_mlcurlcurl_interpolation);
++
+     IntVect ratio = (amrlev > 0) ? IntVect(2) : this->mg_coarsen_ratio_vec[fmglev];
+     AMREX_ALWAYS_ASSERT(ratio == 2);
+ 
+@@ -374,6 +386,11 @@ void
+ MLCurlCurl::apply (int amrlev, int mglev, MF& out, MF& in, BCMode /*bc_mode*/,
+                    StateMode /*s_mode*/, const MLMGBndryT<MF>* /*bndry*/) const
+ {
++    BL_PROFILE_VAR(
++        "MLCurlCurl::apply::amr=" + std::to_string(amrlev)
++            + "::mg=" + std::to_string(mglev),
++        blp_mlcurlcurl_apply);
++
+     applyBC(amrlev, mglev, in, CurlCurlStateType::x);
+ 
+     auto dxinv = this->m_geom[amrlev][mglev].InvCellSizeArray();
+@@ -531,6 +548,11 @@ MLCurlCurl::apply (int amrlev, int mglev, MF& out, MF& in, BCMode /*bc_mode*/,
+ void MLCurlCurl::smooth (int amrlev, int mglev, MF& sol, const MF& rhs,
+                          bool skip_fillboundary, int niter) const
+ {
++    BL_PROFILE_VAR(
++        "MLCurlCurl::smooth::amr=" + std::to_string(amrlev)
++            + "::mg=" + std::to_string(mglev),
++        blp_mlcurlcurl_smooth);
++
+     AMREX_ASSERT(rhs[0].nGrowVect().allGE(1));
+ 
+     applyBC(amrlev, mglev, const_cast<MF&>(rhs), CurlCurlStateType::b);
+@@ -559,6 +581,12 @@ void MLCurlCurl::smooth (int amrlev, int mglev, MF& sol, const MF& rhs,
+ void MLCurlCurl::smooth1D (int amrlev, int mglev, MF& sol, MF const& rhs,
+                            int color) const
+ {
++    BL_PROFILE_VAR(
++        "MLCurlCurl::kernel::smooth1D::amr=" + std::to_string(amrlev)
++            + "::mg=" + std::to_string(mglev)
++            + "::color=" + std::to_string(color),
++        blp_mlcurlcurl_smooth1d);
++
+     auto const& ex = sol[0].arrays();
+     auto const& ey = sol[1].arrays();
+     auto const& ez = sol[2].arrays();
+@@ -643,6 +671,12 @@ void MLCurlCurl::smooth1D (int amrlev, int mglev, MF& sol, MF const& rhs,
+ void MLCurlCurl::smooth4 (int amrlev, int mglev, MF& sol, MF const& rhs,
+                           int color) const
+ {
++    BL_PROFILE_VAR(
++        "MLCurlCurl::kernel::smooth4::amr=" + std::to_string(amrlev)
++            + "::mg=" + std::to_string(mglev)
++            + "::color=" + std::to_string(color),
++        blp_mlcurlcurl_smooth4);
++
+     auto const& ex = sol[0].arrays();
+     auto const& ey = sol[1].arrays();
+     auto const& ez = sol[2].arrays();
+@@ -763,6 +797,11 @@ void MLCurlCurl::correctionResidual (int amrlev, int mglev, MF& resid, MF& x,
+ 
+ void MLCurlCurl::compresid (int amrlev, int mglev, MF& resid, MF const& b) const
+ {
++    BL_PROFILE_VAR(
++        "MLCurlCurl::kernel::compresid::amr=" + std::to_string(amrlev)
++            + "::mg=" + std::to_string(mglev),
++        blp_mlcurlcurl_compresid);
++
+     auto dinfo = getDirichletInfo(amrlev,mglev);
+ 
+ #ifdef AMREX_USE_OMP
