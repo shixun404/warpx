@@ -55,6 +55,12 @@ pc_curl_curl_mlmg.max_iter = 10
 pc_curl_curl_mlmg.relative_tolerance = 1.e-4
 pc_curl_curl_mlmg.no_gpu_sync = true
 
+warpx.do_device_synchronize = 0
+tiny_profiler.device_synchronize_around_region = 0
+amrex.use_profiler_syncs = 0
+
+pc_curl_curl_mlmg.no_gpu_sync = true
+
 algo.particle_pusher = boris
 algo.particle_shape = 2
 algo.current_deposition = villasenor
