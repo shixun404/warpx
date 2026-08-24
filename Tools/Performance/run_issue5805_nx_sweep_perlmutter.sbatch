@@ -32,7 +32,7 @@ nppc="${NPPC:-8}"
 max_step="${MAX_STEP:-10}"
 nrepeat="${NREPEAT:-3}"
 run_nsys="${RUN_NSYS:-1}"
-nsys_trace="${NSYS_TRACE:-cuda,nvtx,osrt}"
+nsys_trace="${NSYS_TRACE:-cuda,nvtx,mpi,osrt}"
 
 if [[ -z "${MY_PROFILE:-}" ]]; then
     profile_file="${PERLMUTTER_GPU_PROFILE:-${HOME}/perlmutter_gpu_warpx.profile}"
