@@ -92,6 +92,7 @@ for nx in "${nx_values[@]}"; do
         ' _ \
             "${warpx_exe}" "${input_file}" \
             "amr.n_cell=${nx}" "${nx}" \
+            "warpx.do_device_synchronize=${DO_DEVICE_SYNCHRONIZE:-0}" \
             "my_constants.nppcz=${nppc}" \
             "max_step=${max_step}" \
             > "${log_file}" 2>&1
