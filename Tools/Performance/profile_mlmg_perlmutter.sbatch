@@ -78,6 +78,11 @@ export TARGET_INPUT="${target_input}"
 export TARGET_ARGS="${TARGET_ARGS:-}"
 export NSYS_TRACE="${NSYS_TRACE:-cuda,nvtx,mpi,osrt}"
 
+export NSYS_SAMPLE="${NSYS_SAMPLE:-none}"
+export NSYS_CPUCTXSW="${NSYS_CPUCTXSW:-none}"
+export NSYS_BACKTRACE="${NSYS_BACKTRACE:-lbr}"
+export NSYS_CUDA_BACKTRACE="${NSYS_CUDA_BACKTRACE:-none}"
+
 # TARGET_INPUT can point at the team's exact native input deck or Python application.
 srun --cpu-bind=cores bash -c '
     export CUDA_VISIBLE_DEVICES=$((3-SLURM_LOCALID))
@@ -89,8 +94,10 @@ srun --cpu-bind=cores bash -c '
     nsys profile \
         --trace="${NSYS_TRACE}" \
         "${nsys_mpi_args[@]}" \
-        --sample=none \
-        --cpuctxsw=none \
+        --sample="${NSYS_SAMPLE}" \
+        --cpuctxsw="${NSYS_CPUCTXSW}" \
+        --backtrace="${NSYS_BACKTRACE}" \
+        --cudabacktrace="${NSYS_CUDA_BACKTRACE}" \
         --force-overwrite=true \
         --output="${PROFILE_DIR}/mlmg-rank${SLURM_PROCID}" \
         "${PROFILE_EXE}" "${TARGET_INPUT}" "${target_args[@]}"
