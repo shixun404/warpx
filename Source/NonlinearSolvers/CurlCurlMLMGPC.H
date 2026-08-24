@@ -114,6 +114,7 @@ class CurlCurlMLMGPC : public Preconditioner<T,Ops>
         bool m_bottom_verbose = false;
         bool m_agglomeration = true;
         bool m_consolidation = true;
+        bool m_no_gpu_sync = false;
         bool m_use_gmres = false;
         bool m_use_gmres_pc = true;
 
@@ -163,6 +164,7 @@ void CurlCurlMLMGPC<T,Ops>::printParameters() const
     Print() << pc_name << " max iter:             " << m_max_iter << "\n";
     Print() << pc_name << " agglomeration:        " << m_agglomeration << "\n";
     Print() << pc_name << " consolidation:        " << m_consolidation << "\n";
+    Print() << pc_name << " no GPU sync:          " << m_no_gpu_sync << "\n";
     Print() << pc_name << " max_coarsening_level: " << m_max_coarsening_level << "\n";
     Print() << pc_name << " absolute tolerance:   " << m_atol << "\n";
     Print() << pc_name << " relative tolerance:   " << m_rtol << "\n";
@@ -183,6 +185,7 @@ void CurlCurlMLMGPC<T,Ops>::readParameters()
     pp.query("max_iter", m_max_iter);
     pp.query("agglomeration", m_agglomeration);
     pp.query("consolidation", m_consolidation);
+    pp.query("no_gpu_sync", m_no_gpu_sync);
     pp.query("max_coarsening_level", m_max_coarsening_level);
     pp.query("absolute_tolerance",  m_atol);
     pp.query("relative_tolerance",  m_rtol);
@@ -246,6 +249,7 @@ void CurlCurlMLMGPC<T,Ops>::Define ( const T& a_U,
 
     // Construct the MLMG solver
     m_solver = std::make_unique<MLMGT<MFArr>>(*m_curl_curl);
+    m_solver->setNoGpuSync(m_no_gpu_sync);
     m_solver->setMaxIter(m_max_iter);
     m_solver->setFixedIter(m_max_iter);
     m_solver->setVerbose(static_cast<int>(m_verbose));

@@ -325,6 +325,9 @@ Overall simulation parameters
             - ``pc_curl_curl_mlmg.bottom_verbose`` (``bool``, default: false)
             - ``pc_curl_curl_mlmg.agglomeration`` (``bool``, default: true)
             - ``pc_curl_curl_mlmg.consolidation`` (``bool``, default: true)
+            - ``pc_curl_curl_mlmg.no_gpu_sync`` (``bool``, default: false). When true, MLMG
+              uses a single GPU stream and skips internal GPU synchronizations while preserving
+              kernel ordering.
             - ``pc_curl_curl_mlmg.max_iter`` (``int``, default: 10)
             - ``pc_curl_curl_mlmg.max_coarsening_level`` (``int``, default: 30)
             - ``pc_curl_curl_mlmg.relative_tolerance`` (``float``, default: 1.0e-4)

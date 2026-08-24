@@ -53,6 +53,7 @@ jacobian.pc_type = pc_curl_curl_mlmg
 pc_curl_curl_mlmg.verbose = false
 pc_curl_curl_mlmg.max_iter = 10
 pc_curl_curl_mlmg.relative_tolerance = 1.e-4
+pc_curl_curl_mlmg.no_gpu_sync = true
 
 algo.particle_pusher = boris
 algo.particle_shape = 2
