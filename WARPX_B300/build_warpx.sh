@@ -10,7 +10,7 @@ WARPX_DIR=${WARPX_DIR:-$(git rev-parse --show-toplevel)}
 : "${AMREX_DIR:?Set AMREX_DIR to the AMReX source checkout}"
 AMREX_DIR=$(cd -- "${AMREX_DIR}" && pwd)
 
-BUILD_DIR=${WARPX_BUILD_DIR:-${WARPX_DIR}/build-roelof-sp}
+BUILD_DIR=${WARPX_BUILD_DIR:-${WARPX_DIR}/build-roelof-dp}
 PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE:-$(command -v python)}
 PYTHON_ROOT_DIR=${PYTHON_ROOT_DIR:-${VIRTUAL_ENV:-${CONDA_PREFIX:-}}}
 
@@ -44,8 +44,8 @@ cmake --fresh -S "${WARPX_DIR}" -B "${BUILD_DIR}" \
     -DWarpX_DIMS=$dims -DWarpX_OPENPMD=OFF \
     -DWarpX_QED=OFF -DWarpX_PYTHON=ON -DWarpX_FFT=OFF \
     -DWarpX_COMPUTE=CUDA \
-    -DWarpX_PRECISION=SINGLE \
-    -DWarpX_PARTICLE_PRECISION=SINGLE \
+    -DWarpX_PRECISION=DOUBLE \
+    -DWarpX_PARTICLE_PRECISION=DOUBLE \
 -DWarpX_amrex_src="${AMREX_DIR}" \
 -DAMReX_DIFFERENT_COMPILER=ON \
 -DPython_ROOT_DIR="${PYTHON_ROOT_DIR}" \
