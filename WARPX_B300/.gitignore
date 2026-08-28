@@ -1,0 +1,5 @@
+__pycache__/
+*.py[cod]
+test_run1/repro_*.out
+test_run1/log_*.out
+test_run1/warpx_used_inputs
